@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "actionGroup_admin_ResourceId": {
+            "value": "********************"
+        },
+		//"actionGroup_rt_ResourceId": {
+        //    "value": ""
+        //},
+        "logAnalyticsWorkspaceId": {
+            "value": "********************"
+        },
+        "logAnalyticsWorkspaceLocation": {
+            "value": "westeurope"
+        },
+		"alertName": {
+            "value": "Linux memory pctcommbytes_c alert"
+        },
+		"alertDescription": {
+            "value": "Linux VM Used Memory  Percentage is more than 95%"
+        },
+		"logQuery": {
+            "value": "Perf | where Computer in ( linux_servers ) | where ObjectName == \"Memory\" and CounterName == \"% Used Memory\" | summarize AggregatedValue = round(max(CounterValue),2) by bin(TimeGenerated, 15m) , Computer"
+        }
+    }
+}

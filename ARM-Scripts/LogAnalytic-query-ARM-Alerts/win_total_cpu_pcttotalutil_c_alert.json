@@ -1,0 +1,101 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logAnalyticsWorkspaceId": {
+            "type": "string",
+            "metadata": {
+                "description": "Scope based on Log Analytics Workspace"
+            }
+        },
+        "logAnalyticsWorkspaceLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "westeurope"
+            }
+        },
+        "actionGroup_hact_admin_ResourceId": {
+            "type": "string",
+            "metadata": {
+                "description": "Description for Action Group"
+            }
+        },
+		//"actionGroup_rt_ResourceId": {
+        //    "type": "string",
+        //   "metadata": {
+        //       "description": "Description for Action Group"
+        //   }
+        //},
+		"alertName": {
+            "type": "string",
+            "metadata": {
+                "description": "Description for AlertName"
+            }
+		},
+		"alertDescription": {
+            "type": "string",
+            "metadata": {
+                "description": "Description for AlertName"
+            }
+		},
+		"logQuery": {
+            "type": "string",
+            "metadata": {
+                "description": "Query updated in parameters"
+            }
+        }
+	},
+    "variables": {
+        "apiVersions": {
+            "scheduledQueryRules": "2018-04-16"
+        }
+    },
+    "resources": [
+        {
+            "name": "[parameters('alertName')]",
+            "type": "Microsoft.Insights/scheduledQueryRules",
+            "apiVersion": "[variables( 'apiVersions' ).scheduledQueryRules]",
+            "location": "[parameters( 'logAnalyticsWorkspaceLocation' )]",
+            "properties": {
+                "description": "[parameters('alertDescription')]",
+                "displayName": "[parameters('alertName')]",
+                "enabled": "false",
+                "source": {
+                    "authorizedResources": [
+                    ],
+                    "query": "[parameters('logQuery')]",
+					"dataSourceId": "[parameters('logAnalyticsWorkspaceId')]",
+                    "queryType": "ResultCount"
+                },
+                "schedule": {
+                    "frequencyInMinutes": 15,
+                    "timeWindowInMinutes": 15
+                },
+                "action": {
+                    "odata.type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction",
+                    "severity": "3",
+                    "throttlingInMin": 0,
+                    "aznsAction": {
+                        "actionGroup": [
+                            "[parameters('actionGroup_admin_ResourceId')]"
+							//"[parameters('actionGroup_rt_ResourceId')]"
+                        ],
+                        "emailSubject": null,
+                        "customWebhookPayload": null
+                    },
+                    "trigger": {
+                        "thresholdOperator": "GreaterThan",
+                        "threshold": 95,
+                        "metricTrigger": {
+                            "thresholdOperator": "GreaterThan",
+                            "threshold": 0,
+                            "metricTriggerType": "Total",
+                            "metricColumn": "_ResourceId,SvcDisplayName"
+                        }
+                    }
+                }
+            }
+        }
+      ]
+	
+}
