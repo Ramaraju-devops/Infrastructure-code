@@ -1,0 +1,44 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- mydemorgdeploy
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+  inputs:
+    terraformVersion: 'latest'
+    displayName: Terraform Installer
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    workingDirectory: 'RG-Creation'
+    backendServiceArm: 'mydevops-connection'
+    backendAzureRmResourceGroupName: 'terraform-demo-rg'
+    backendAzureRmStorageAccountName: 'terrapushstorage3000'
+    backendAzureRmContainerName: 'pipelineterrastatecont'
+    backendAzureRmKey: 'pipelineterra.tfstate'
+    displayName: Terraform Init
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    workingDirectory: 'RG-Creation'
+    environmentServiceNameAzureRM: 'mydevops-connection'
+    displayName: Terraform Plan
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    workingDirectory: 'RG-Creation'
+    environmentServiceNameAzureRM: 'mydevops-connection'
+    displayName: Terraform Apply
