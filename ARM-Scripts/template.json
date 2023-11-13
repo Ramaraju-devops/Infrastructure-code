@@ -1,0 +1,135 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccounts_name": {
+            "defaultValue": "",
+            "type": "String"
+        },
+		"storageAccountType": {
+            "type": "string",
+            "defaultValue": "",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_ZRS",
+                "Premium_LRS"
+            ],
+            "metadata": {
+                "description": "Storage Account type"
+        }
+	 }
+		
+		
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-01-01",
+            "name": "[parameters('storageAccounts_name')]",
+            "location": "westeurope",
+            "sku": {
+                "name": "[parameters('storageAccountType')]",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "minimumTlsVersion": "TLS1_0",
+                "allowBlobPublicAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2023-01-01",
+            "name": "[concat(parameters('storageAccounts_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name'))]"
+            ],
+            "sku": {
+                "name": "[parameters('storageAccountType')]",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "allowPermanentDelete": false,
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2023-01-01",
+            "name": "[concat(parameters('storageAccounts_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name'))]"
+            ],
+            "sku": {
+                "name": "[parameters('storageAccountType')]",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2023-01-01",
+            "name": "[concat(parameters('storageAccounts_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2023-01-01",
+            "name": "[concat(parameters('storageAccounts_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        }
+    ]
+}
