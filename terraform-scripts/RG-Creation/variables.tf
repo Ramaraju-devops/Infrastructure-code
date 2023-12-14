@@ -3,7 +3,7 @@
 variable "rgname" {
   type = string
   description = "This variable defines the Resource Group"
-  default = "xyz-terraform-rg-demo"
+  default = "dem-ci-tf-rg-01"
 }
 
 # Azure Location
