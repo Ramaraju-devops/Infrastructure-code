@@ -3,7 +3,7 @@
 	"contentVersion": "1.0.0.0",
 	"parameters": {
 		"storageAccount_name": {
-			"value": "demstracctarmloc2008"
+			"value": "dmciarmclssa01"
 		},
 		"storageAccount_location": {
 			"value": "west europe"
