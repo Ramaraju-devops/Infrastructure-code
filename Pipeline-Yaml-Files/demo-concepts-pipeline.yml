@@ -1,0 +1,90 @@
+name: demo-concepts-pipeline
+trigger:
+  branches:
+    include:
+    - demo-apr24
+pool:
+  vmImage: ubuntu latest
+parameters:
+- name: terraformapply
+  type: boolean
+  default: false
+- name: jobtopass
+  displayName: Enable job 2
+  type: string
+  default: false
+  values:
+  - true
+  - false
+- name: test_parameter
+  type: string
+  default: test
+variables:
+- name: terraapply
+  value: False
+- group: test-variables
+- name: allowjob
+  value: false
+stages:
+- stage: stage_1
+  jobs:
+  - job: job_1
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: inline
+        script: 'write-host $(testvariable1)
+
+          write-host $(testvariable2)'
+    - task: CmdLine@2
+      inputs:
+        script: echo $(testvariable1)
+  - job: job_2
+    dependsOn:
+    - job_1
+    condition: eq(variables.allowjob, 'true')
+    steps:
+    - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@1
+      displayName: terraform install
+      inputs:
+        terraformVersion: 'latest'
+    - task: TerraformTaskV4@4
+      displayName: INIT
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-code'
+        backendServiceArm: 'azure-connect-sp-feb24'
+        backendAzureRmResourceGroupName: 'github-tfstates-rg'
+        backendAzureRmStorageAccountName: 'stracctgithubterr01'
+        backendAzureRmContainerName: 'tfstatecontainer'
+        backendAzureRmKey: 'citerratest.tfstate'
+    - task: TerraformTaskV4@4
+      displayName: VALIDATE
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-code'
+    - task: TerraformTaskV4@4
+      displayName: PLAN
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-code'
+        environmentServiceNameAzureRM: 'azure-connect-sp-feb24'
+    - task: TerraformTaskV4@4
+      condition: and(succeeded(), eq(variables.terraapply, true))
+      displayName: APPLY
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-code'
+        environmentServiceNameAzureRM: 'azure-connect-sp-feb24'
+- stage: stage_2
+  jobs:
+  - job: stage2_job1
+    steps:
+    - task: CmdLine@2
+      inputs:
+        script: echo 'test stage and job for demo'
+
