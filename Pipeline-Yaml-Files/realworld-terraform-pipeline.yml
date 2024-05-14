@@ -1,0 +1,176 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: Template of one of the Realtime deployment model
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+
+parameters:
+  - name: agentname
+    displayName: Specify Agent Name
+    default: 'ubuntu-latest'
+    type: string
+    values:
+      - ubuntu-latest
+      - windows-latest
+      
+  - name: service_connection
+    displayName: 'Azure DevOps Sevice Connection Name'
+    type: string
+    default: azure-connection
+
+  - name: subscription_id
+    displayName: 'Subscription ID'
+    type: string
+    default: null
+
+  - name: tf_state_file
+    displayName: 'Enter TF state file Name'
+    type: string
+    default: null
+
+  - name: work_loads
+    displayName: 'Inputs for Deployment'
+    type: object
+    default: []
+    
+  - name: require_manual_validate
+    displayName: 'Check for Approval'
+    type: boolean
+    default: false
+
+
+stages:
+  - stage: stage_1
+    displayName:  Pre Deployment
+    jobs:
+      - job: Job_1
+        displayName: ExportAgentName
+        steps:
+          - pwsh: |
+              echo "Agent Name: $(Agent.Name)"
+      - job: job_2
+        displayName: Terraform Input Data
+        dependsOn: job_1
+        steps:
+          - pwsh: 
+            displayName: Create Terraform Directory
+            
+          - pwsh: 
+            displayName: Convert Variables to Json
+          
+          - pwsh: 
+            displayName: Check and Update tfstatefile variable
+
+          - pwsh: 
+            displayName: Terraform Input Variables
+
+          - pwsh: 
+            displayName: Export Input Variables to be used in next steps/jobs/Stages
+
+          - pwsh: 
+            displayName: Json schema file validation
+
+      - job: job_3
+        displayName: Common Preparation
+        dependsOn: job_2
+        steps:
+          - pwsh: 
+            displayName: Export Required Variables
+
+          - pwsh: 
+            displayName: Download Solution Arifact
+
+          - pwsh: 
+            displayName: Download Package
+
+          - pwsh: 
+            displayName: Modules Workspace
+
+          - pwsh: 
+            displayName: Check RG and Create If not exist
+
+          - pwsh: 
+            displayName: Check storage account and create if not exist
+
+  - stage: stage_2
+    displayName: Terraform Deployment
+    dependsOn: stage_1
+    jobs:
+      - job: job_2_1
+        displayName: Deployment Validation
+        steps:
+          - pwsh: 
+            displayName: Copy Backend and Provider to TF working directory
+          
+          - task: TerraformCLI@0
+            displayName: Terraform INIT
+
+          - task: TerraformCLI@0
+            displayName: Terraform Validate
+
+          - task: TerraformCLI@0
+            displayName: Terraform PLAN
+
+
+      - job: job_2_2
+        displayName: Deployment Approval
+        dependsOn: job_2_1
+        # steps:
+        #   - task: ManualValidation@0
+        #     timeoutInMinutes: 600
+        #     enabled: ${{parameters.require_manual_validate}}
+        #     inputs:
+        #       notifyUsers: 'rraj95155@gmail.com'
+        #       instructions: 'Please verify the Terraform Plan and then Approve or Reject'
+
+      - job: job_2_3
+        displayName: unlock RG
+        dependsOn: job_2_2
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'test-connnetion-feb24'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: 'az --version'
+            displayName: 'Check and Unlock RG'
+
+      - job: job_2_4
+        displayName: Terrform Deployment
+        dependsOn: job_2_3
+        steps:
+          - task: TerraformCLI@0
+            displayName: Terraform APPLY
+
+
+  - stage: Stage_3
+    displayName: Post Deployment
+    dependsOn: stage_2
+    jobs:
+      - job: Job_3_1
+        displayName: Deployment Verification
+        steps:
+          - task: TerraformCLI@0
+            displayName: Terraform Verification with PLAN
+
+          - pwsh: 
+            displayName: Resource Deployment Validation
+
+
+      - job: job_3_2
+        displayName: Cleanup
+        dependsOn: job_3_1
+        steps:
+          - pwsh: 
+            displayName: Lock Resource Group
+
+          - pwsh: 
+            displayName: Cleanup Terraform Directory in Agent
