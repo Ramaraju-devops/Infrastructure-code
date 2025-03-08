@@ -1,0 +1,70 @@
+Jenkins setup
+=================
+
+1. Create a Virtual Machine - Ubuntu 22.04
+2. Install Jenkins using below steps:
+
+	Java Installation - https://www.jenkins.io/doc/book/installing/linux/#installation-of-java
+	-------------------
+	sudo apt update
+	sudo apt install fontconfig openjdk-17-jre
+	java -version
+
+	Below is the output of the above command:
+	--------------------------------------
+	openjdk version "17.0.13" 2024-10-15
+	OpenJDK Runtime Environment (build 17.0.13+11-Debian-2)
+	OpenJDK 64-Bit Server VM (build 17.0.13+11-Debian-2, mixed mode, sharing)
+
+	Jenkins Installation steps: https://www.jenkins.io/doc/book/installing/linux/#debian-stable
+	--------------------------
+	sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+	  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+	  
+	echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
+	  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+	  /etc/apt/sources.list.d/jenkins.list > /dev/null
+	  
+	sudo apt-get update
+
+	sudo apt-get install jenkins
+
+	sudo systemctl status jenkins
+	If everything has been set up correctly, you should see an output like this:
+
+	Loaded: loaded (/lib/systemd/system/jenkins.service; enabled; vendor preset: enabled)
+	Active: active (running) since Tue 2023-06-22 16:19:01 +03; 4min 57s ago
+
+3. Login to Jenkins server:
+	Note: In Azure add inbound port rule with 8080 at Azure VM level
+	1. copy the public IP
+	2. http://public-IP:8080/
+	3. Follow the steps from below link
+		https://www.jenkins.io/doc/book/installing/linux/#unlocking-jenkins
+	4. Install Azure Plugin in Jenkins
+	5. Create Pipelines
+		1. Create Credential for GitHub
+		2. Create Credentials for Azure Service Principal
+
+4. Install Terraform in Ubuntu server: https://developer.hashicorp.com/terraform/install#linux
+	wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+	sudo apt update && sudo apt install terraform
+
+5. Install Azure CLI on Ubuntu"
+	https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt#install-azure-cli
+	curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+
+
+# Azure CLI Command for creating service principal in Azure
+---------------------------------------------
+az ad sp create-for-rbac --name mygithubconnect --role contributor --scopes /subscriptions/<paste the subscription-id>
+
+
+{
+  "appId": "5eaded78-69b1-4513-8de9-kdinei115664656", - this is application ID/Client ID
+  "displayName": "GitHubServicePrincipal",
+  "password": "akjsdkakdjkfjkadsfklsdafasdlkf", - this is application Secret/Client Secret
+  "tenant": "84f96efe-d3ca-47a5-bc04-8d455c1e0e15"
+}

@@ -1,0 +1,91 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- develop
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: 'TerraformApply'
+    type: boolean
+    default: false
+
+  - name: 'testinput1'
+    type: string
+    default: test
+
+# variables:
+# - name: 'TerraformApply'
+
+stages:
+- stage: 
+  displayName: 'stage 1'
+  jobs:
+    - job: 
+      displayName: 'Terraform Plan and Apply'
+
+      pool:
+        vmImage: ubuntu-latest
+      
+      steps:
+        - bash: |
+              echo 'welcome to bash'
+              # terraform init
+              # terraform validate
+              # terraform plan
+        
+        - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+          inputs:
+            terraformVersion: 'latest'
+        
+        - task: TerraformTaskV4@4
+          displayName: 'Terraform Init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-practise-1'
+            backendServiceArm: 'Service-Connection-Jan25'
+            backendAzureRmResourceGroupName: 'github-tfstates-rg'
+            backendAzureRmStorageAccountName: 'stracctgithubterr01'
+            backendAzureRmContainerName: 'tfstatecontainer'
+            backendAzureRmKey: 'testciyaml1.tfstate'
+
+        - task: TerraformTaskV4@4
+          displayName: 'Terraform Validate'
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-practise-1'
+
+        - task: TerraformTaskV4@4
+          displayName: 'Terraform PLAN'
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-practise-1'
+            environmentServiceNameAzureRM: 'Service-Connection-Jan25'
+        
+        - task: TerraformTaskV4@4
+          displayName: 'Terraform Apply'
+          condition: and(succeeded(), ${{ eq(parameters.TerraformApply, true) }})
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-practise-1'
+            environmentServiceNameAzureRM: 'Service-Connection-Jan25'
+
+
+    # - job: 
+    #   # displayName: 'Terraform Apply'
+    #   dependsOn: job1
+    #   steps:
+    #     - bash: echo 'Welcome to terraform apply'
+    #       # displayName: 'Terraform Apply'
+      
+
+
+

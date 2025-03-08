@@ -1,0 +1,38 @@
+# test pipeline with variables testing
+
+
+trigger:
+- develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- name: testvar1
+  value: 'local var value 1'
+
+- name: testvar2
+  value: 'local var value 2'
+
+- group: 'test-vargroup-jan25'
+
+
+stages:
+    - stage: 
+      jobs:
+          - job: 
+            displayName: 'test pipeline'
+
+            pool:
+              vmImage: ubuntu-latest
+
+            
+            steps:
+                - bash: echo '$(testvar1)'
+
+                - pwsh: write-host '$(testvar2)'
+
+                - script: |
+                    
+                    echo '$(testvargrp-variable1)'
+                    echo '$(testvargrp-variable2)'
